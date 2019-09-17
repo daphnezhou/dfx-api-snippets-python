@@ -76,7 +76,7 @@ if __name__ == "__main__":
     deviceToken = response.text[index1+8:index2]
     print("Device Token: ", deviceToken)
 
-    # Login and get user token
+    Login and get user token
     userdata = {
                 "Email": "{}".format(username),
                 "Password": "{}".format(password)
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     loop.run_until_complete(wait_tasks)
 
     # Retrieve measurement results
-    meaHeaders = {"Content-Type": "application/json", "Authorization": "{}".format(userToken)}
+    meaHeaders = {"Content-Type": "application/json", "Authorization": "{}".format(token)}
     meaResponse = requests.get(rest_url+'/measurements/'+measurementID, headers=meaHeaders)
     print('*'*50)
     print("Measurement (", measurementID, ") Retrieve Results: \n", meaResponse.json())
