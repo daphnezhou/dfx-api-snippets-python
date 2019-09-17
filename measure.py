@@ -32,6 +32,7 @@ if __name__ == "__main__":
                         choices=["REST", "Websocket"],
                         default="REST")
     parser.add_argument("--mode", help="Measurement mode", default="DISCRETE")
+    parser.add_argument("--numRun", help="# of concurrent Anura measurements", default="1")
 
     args = parser.parse_args()
 
@@ -44,6 +45,7 @@ if __name__ == "__main__":
     output_directory = args.outputDir
     mode = args.mode
     server = args.server
+    num_run = args.numRun
 
     # INTERNAL: Get server urls given the server name
     if server == "qa":
@@ -53,8 +55,8 @@ if __name__ == "__main__":
         rest_url = "https://dev.api.deepaffex.ai:9443"
         ws_url = "wss://dev.api.deepaffex.ai:9080"
     elif server == "prod":
-        rest_url = "https://api.deepaffex.ai:9443"
-        ws_url = "wss://api.deepaffex.ai:9080"
+        rest_url = "https://api2.api.deepaffex.ai:9443"
+        ws_url = "wss://api2.api.deepaffex.ai:9080"
     elif server == "prod-cn":
         rest_url = "https://api.deepaffex.cn:9443"
         ws_url = "wss://api.deepaffex.cn:9080"
@@ -101,7 +103,6 @@ if __name__ == "__main__":
 
     # Create a measurement object and get a measurement ID
     createmeasurementObj = createMeasurement(studyID, token, rest_url, mode)
-    # measurementID = createmeasurementObj.create()
     createMeaResults = createmeasurementObj.create()
     cretaeMeaTime = createMeaResults[0]
     measurementID = createMeaResults[1]
@@ -147,32 +148,33 @@ if __name__ == "__main__":
     print('*'*50)
 
     # Generate Test Report
+    # Note: Will time out in 15 seconds if lock is not acquired
     myLock = NamedAtomicLock('saveTimeToXL')
     if myLock.acquire(timeout=15):
-        if path.exists('Test_Report.xlsx') == True:
-            print("Test_Report.xlsx already exists, append to it.")
+        reportTime = datetime.date.today()
+        if path.exists('Test_Report_'+str(reportTime)+'.xlsx') == True:
+            print('Test_Report_'+str(reportTime)+'.xlsx already exists, append to it.')
 
-            df = pd.read_excel('Test_Report.xlsx')
+            df = pd.read_excel('Test_Report_'+str(reportTime)+'.xlsx')
 
-            excelRow = [(measurementID, str(cretaeMeaTime), str(subscribeResultsTime), str(tDiff.total_seconds()))]
-            df_new = pd.DataFrame(excelRow, columns=['Measurement ID', 'Create Measurement Time', 'Subscribe Measurement Time', 'Total Measurement Process Time'])
-            # print("df_new: ", df_new)
+            excelRow = [(num_run, measurementID, str(cretaeMeaTime), str(subscribeResultsTime), str(tDiff.total_seconds()))]
+            df_new = pd.DataFrame(excelRow, columns=['# of Anura Measurements', 'Measurement ID', 'Create Measurement Time', 'Subscribe Measurement Time', 'Total Measurement Process Time'])
 
             df = df.append(df_new, ignore_index=True)
 
             # print("df after append: ", df)
         
         else:
-            print("Test_Report.xlsx does not exist, create a new one.")    
+            print('Test_Report_'+str(reportTime)+'.xlsx does not exist, create a new one.')    
 
-            excelRow = [(measurementID, str(cretaeMeaTime), str(subscribeResultsTime), str(tDiff.total_seconds()))]
-            df = pd.DataFrame(excelRow, columns=['Measurement ID', 'Create Measurement Time', 'Subscribe Measurement Time', 'Total Measurement Process Time'])    
+            excelRow = [(num_run, measurementID, str(cretaeMeaTime), str(subscribeResultsTime), str(tDiff.total_seconds()))]
+            df = pd.DataFrame(excelRow, columns=['# of Anura Measurements', 'Measurement ID', 'Create Measurement Time', 'Subscribe Measurement Time', 'Total Measurement Process Time'])
 
             # print("df after create: ", df)
 
-        df.to_excel('Test_Report.xlsx', index=False)
+        df.to_excel('Test_Report_'+str(reportTime)+'.xlsx', index=False)
 
-        print('Measurement: '+measurementID+' has been saved to Test Report!')
+        print('Measurement: '+measurementID+' has been saved to Test_Report_'+str(reportTime)+'.xlsx!')
 
         myLock.release()
     else:
