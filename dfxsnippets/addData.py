@@ -50,14 +50,6 @@ class addData():
             else:
                 action = 'CHUNK::PROCESS'
 
-<<<<<<< HEAD
-            # if (meta["dfxsdk"] < "4.0"):
-            if (meta["libdfx"] < "4.0"):
-                chunkOrder = properties['chunkNumber']
-                startTime = properties['startTime_s']
-                endTime = properties['endTime_s']
-            else:
-=======
             try:
                 if (meta["dfxsdk"] < "4.0"):
                     chunkOrder = properties['chunkNumber']
@@ -68,7 +60,6 @@ class addData():
                     startTime = properties['start_time_s']
                     endTime = properties['end_time_s']
             except:
->>>>>>> fa97d9e8124826a60e71fc139605327d3c5d3f1d
                 chunkOrder = properties['chunk_number']
                 startTime = properties['start_time_s']
                 endTime = properties['end_time_s']
@@ -148,6 +139,9 @@ class addData():
             actionID = '0506'
             wsID = self.ws_obj.ws_ID
             for chunk in self.chunks:
+                if "FIRST" in chunk.Action:
+                    print("FIRST--sleep for the chunk duration--SendAsync: ", chunk.Duration)
+                    await asyncio.sleep(chunk.Duration)
                 content = f'{actionID:4}{wsID:10}'.encode() + chunk.SerializeToString()
                 await self.ws_obj.handle_send(content)
                 while True:
