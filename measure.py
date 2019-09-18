@@ -3,8 +3,6 @@ import asyncio
 import requests
 import json
 import datetime
-import xlsxwriter as xls
-import openpyxl as op
 import pandas as pd
 from os import path
 from NamedAtomicLock import NamedAtomicLock
@@ -76,7 +74,7 @@ if __name__ == "__main__":
     deviceToken = response.text[index1+8:index2]
     print("Device Token: ", deviceToken)
 
-    Login and get user token
+    # Login and get user token
     userdata = {
                 "Email": "{}".format(username),
                 "Password": "{}".format(password)
