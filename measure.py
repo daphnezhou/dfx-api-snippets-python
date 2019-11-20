@@ -22,7 +22,7 @@ if __name__ == "__main__":
     parser.add_argument("--payloadDir", help="Directory of payload files")
     parser.add_argument("--server",
                     help="Name of server to use",
-                    choices=["qa", "dev", "prod", "prod-cn"],
+                    choices=["qa", "dev", "prod", "prod-cn", "demo-cn"],
                     default="dev")
     parser.add_argument("--outputDir", help="Directory for received files", default=None)
     parser.add_argument("--connectionMethod",
@@ -58,6 +58,9 @@ if __name__ == "__main__":
     elif server == "prod-cn":
         rest_url = "https://api.deepaffex.cn:9443"
         ws_url = "wss://api.deepaffex.cn:9080"
+    elif server == "demo-cn":
+        rest_url = "https://demo-api.deepaffex.cn:9443"
+        ws_url = "wss://demo-api.deepaffex.cn:9080"
 
     # Register License and get device token
     data = {
