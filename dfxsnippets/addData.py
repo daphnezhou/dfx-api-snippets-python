@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import functools
+import datetime
 import json
 import os
 import requests
@@ -32,11 +33,11 @@ class addData():
     def prepare_data(self):
         total_num_payload = len(glob(os.path.join(self.input_directory, 'payload*.bin')))
         total_num_meta = len(glob(os.path.join(self.input_directory, 'metadata*.bin')))
-        total_num_properties = len(glob(os.path.join(self.input_directory, 'properties*.json')))
+        total_num_properties = len(glob(os.path.join(self.input_directory, '*.json')))
         if total_num_meta != total_num_payload != total_num_properties:
             raise ValueError('Missing files')
         for i in range(total_num_payload):
-            with open(os.path.join(self.input_directory, 'payload' + str(i) + '.bin'), 'rb') as input_file:
+            with open(os.path.join(self.input_directory, 'payload-' + str(i) + '.bin'), 'rb') as input_file:
                 fileContent = input_file.read()
                 payload = fileContent
             with open(os.path.join(self.input_directory, 'metadata' + str(i) + '.bin'), 'r') as input_file:
@@ -150,6 +151,7 @@ class addData():
                     except TimeoutError:
                         break
                     if self.ws_obj.addDataStats:
+                        print("addData Time: ", datetime.datetime.now().time())
                         response = self.ws_obj.addDataStats[0]
                         self.ws_obj.addDataStats = []
                         break

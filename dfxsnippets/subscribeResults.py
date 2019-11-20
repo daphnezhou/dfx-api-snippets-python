@@ -3,6 +3,8 @@ import os
 import uuid
 import json
 import datetime
+import sys
+import libdfx as dfx
 
 from google.protobuf.json_format import ParseDict
 from dfxsnippets.measurement_pb2 import SubscribeResultsRequest
@@ -43,13 +45,27 @@ class subscribeResults():
         await self.prepare_data()
         await self.ws_obj.handle_send(self.requestData )
 
+        # Create a DFX Factory object
+        self._dfxFactory = dfx.Factory()
+        print("Created DFX Factory:", self._dfxFactory.getVersion())
+
+        # Create an empty self._collector
+        self._collector = None
+        # Create collector
+        self._collector = self._dfxFactory.createCollector()
+        if self._collector.getCollectorState() == dfx.CollectorState.ERROR:
+            print("Collector creation failed: {}".format(
+                self._collector.getLastErrorMessage()))
+            sys.exit(1)
+        print("Created collector")
+
         counter = 0
         while counter < self.num_chunks:
             await self.ws_obj.handle_recieve()
             if counter == self.num_chunks - 1:
                 subscribeResultsTime = datetime.datetime.now().time()
                 self.subscribeResultsTime = subscribeResultsTime
-                print("subscribeResultsTime: ", subscribeResultsTime)
+                print("subscribeResultsTime - last chunk: ", subscribeResultsTime)
             if self.ws_obj.subscribeStats:
                 response = self.ws_obj.subscribeStats[0]
                 self.ws_obj.subscribeStats = []
@@ -62,13 +78,14 @@ class subscribeResults():
                 response = self.ws_obj.chunks[0]
                 self.ws_obj.chunks = []
                 print("Data received; Chunk: " + str(counter) + "; Status: " +
-                      str(statusCode))
+                      str(statusCode) + "; Time: " + str(datetime.datetime.now().time()))
 
                 if self.out_folder:
-                    with open(self.out_folder + '/result_' + str(counter) + '.bin',
-                              'wb') as f:
+                    with open(self.out_folder + '/result_' + str(counter) + '.bin', 'wb') as f:
                         f.write(response[13:])
                         print('/result_' + str(counter) + '.bin has been saved.')
+                    decoded_data = self._collector.decodeMeasurementResult(response[13:])
+                    print("decoded_data.getErrorCode():", decoded_data.getErrorCode())
 
         await self.ws_obj.handle_close()
         return
